@@ -187,6 +187,31 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 @st.cache_data(show_spinner=False)
+
+
+def get_poster(movie_name):
+    url = "https://api.themoviedb.org/3/search/movie"
+    params = {
+        "api_key": TMDB_API_KEY,
+        "query": movie_name,
+        "language": "es-ES"
+    }
+
+    try:
+        r = requests.get(url, params=params, timeout=5).json()
+
+        if r.get("results"):
+            poster_path = r["results"][0].get("poster_path")
+            if poster_path:
+                return f"https://image.tmdb.org/t/p/w500{poster_path}"
+    except:
+        return None
+
+    return None
+
+
+@st.cache_data(show_spinner=False)
+
 def add_posters(df):
     df = df.copy()
     df["poster"] = df["Movie Spanish"].apply(get_poster)
@@ -235,26 +260,7 @@ st.dataframe(
 
 st.write("")
 
-@st.cache_data(show_spinner=False)
-def get_poster(movie_name):
-    url = "https://api.themoviedb.org/3/search/movie"
-    params = {
-        "api_key": TMDB_API_KEY,
-        "query": movie_name,
-        "language": "es-ES"
-    }
 
-    try:
-        r = requests.get(url, params=params, timeout=5).json()
-
-        if r.get("results"):
-            poster_path = r["results"][0].get("poster_path")
-            if poster_path:
-                return f"https://image.tmdb.org/t/p/w500{poster_path}"
-    except:
-        return None
-
-    return None
 
 
 @st.cache_data(show_spinner=False)
