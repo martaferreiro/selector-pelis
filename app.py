@@ -187,8 +187,6 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 @st.cache_data(show_spinner=False)
-
-
 def get_poster(movie_name):
     url = "https://api.themoviedb.org/3/search/movie"
     params = {
@@ -199,7 +197,6 @@ def get_poster(movie_name):
 
     try:
         r = requests.get(url, params=params, timeout=5).json()
-
         if r.get("results"):
             poster_path = r["results"][0].get("poster_path")
             if poster_path:
@@ -211,15 +208,13 @@ def get_poster(movie_name):
 
 
 @st.cache_data(show_spinner=False)
-
 def add_posters(df):
     df = df.copy()
     df["poster"] = df["Movie Spanish"].apply(get_poster)
     return df
 
-
-movies_filter = add_posters(movies_filter)
-
+with st.spinner("Cargando pósters..."):
+    movies_filter = add_posters(movies_filter)
 
 # Dataframe ----------------------------------
 
