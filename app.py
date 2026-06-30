@@ -221,18 +221,23 @@ with st.spinner("Cargando pósters..."):
 
 st.subheader("🍿 Películas disponibles")
 
+movies_filter = movies_filter[["poster", "Movie Spanish"] + [col for col in movies_filter.columns if col not in ["poster", "Movie Spanish"]]]
+
 st.dataframe(
     movies_filter,
     column_config={
         "poster": st.column_config.ImageColumn(
             "Poster",
             help="Poster de la película",
-            width="medium",
+            width="large"
         ),
+        "Movie Spanish": st.column_config.TextColumn(
+            "Película"
+        )
     },
     use_container_width=True,
     hide_index=True,
-    height=800
+    height=1000  # 👈 esto es lo que más “agranda” visualmente las filas
 )
 
 # st.dataframe(
