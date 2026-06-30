@@ -5,6 +5,47 @@
 
 ########
 
+
+st.markdown("""
+<style>
+/* Fondo oscuro tipo Netflix */
+.stApp {
+    background-color: #0e0e10;
+    color: white;
+}
+
+/* Títulos */
+h1, h2, h3 {
+    color: #ffffff;
+    font-family: 'Helvetica';
+}
+
+/* Botones */
+.stButton button {
+    background-color: #e50914;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+/* Dataframe más “cine” */
+.dataframe {
+    border-radius: 10px;
+}
+
+/* Cards */
+.block-container {
+    padding-top: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+
+
+
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -153,17 +194,30 @@ movies_filter['Rating'] = movies_filter['Rating'].round(1)
 # Año sin decimales (entero)
 movies_filter['Year'] = movies_filter['Year'].astype(int)
 
+
+
+st.subheader("📊 Distribución de ratings")
+
+chart_df = movies_filter.copy()
+
+fig_data = chart_df["Rating"].round(1).value_counts().sort_index()
+
+chart_df_plot = pd.DataFrame({
+    "Rating": fig_data.index,
+    "Número de pelis": fig_data.values
+})
+
+st.bar_chart(chart_df_plot.set_index("Rating"))
+
+
+
+
+st.subheader("🍿 Películas disponibles")
+
 st.dataframe(
-    movies_filter.style.format({
-        'Rating': '{:.1f}',
-        'Year': '{:.0f}'
-    }),
-    hide_index=True,
-    column_order=[
-        'Movie Spanish', 'Year', 'Runtime', 'Genre', 'Rating',
-        'Director', 'Language', 'Country', 'sinopsis',
-        'plataformas', 'links_plataformas', 'mi_info'
-    ]
+    movies_filter,
+    use_container_width=True,
+    hide_index=True
 )
 
 st.write("")
