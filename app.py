@@ -13,7 +13,6 @@ import requests
 TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
 
-
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
 # Header ----------------------------------
@@ -23,7 +22,6 @@ with st.container():
     st.write('Más fácil, más películas, menos drama')
     #st.write("[Google Drive >](https://docs.google.com/spreadsheets/d/1F2DuBLlwMgnVOZ7ALzqTzw-r2aaBNe9gKUBOBQKuvx8/edit#gid=0)")
 
-st.write(st.get_option("theme.primaryColor"))
 
 with st.container():
     st.write("---")
@@ -164,7 +162,7 @@ movies_filter['Rating'] = movies_filter['Rating'].round(1)
 # Año sin decimales (entero)
 movies_filter['Year'] = movies_filter['Year'].astype(int)
 
-movies_filter["info_hover"] = movies_filter["sinopsis"].str.slice(0, 120) + "..."
+
 
 # Gráfico ----------------------------------
 
@@ -184,8 +182,18 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 
-# Poster code ----------------------------------
+# Dataframe ----------------------------------
 
+
+st.subheader("🍿 Películas disponibles")
+
+st.dataframe(
+    movies_filter,
+    use_container_width=True,
+    hide_index=True
+)
+
+st.write("")
 
 @st.cache_data(show_spinner=False)
 def get_poster(movie_name):
@@ -198,6 +206,7 @@ def get_poster(movie_name):
 
     try:
         r = requests.get(url, params=params, timeout=5).json()
+
         if r.get("results"):
             poster_path = r["results"][0].get("poster_path")
             if poster_path:
@@ -206,44 +215,6 @@ def get_poster(movie_name):
         return None
 
     return None
-
-
-@st.cache_data(show_spinner=False)
-def add_posters(df):
-    df = df.copy()
-    df["poster"] = df["Movie Spanish"].apply(get_poster)
-    return df
-
-with st.spinner("Cargando pósters..."):
-    movies_filter = add_posters(movies_filter)
-
-# Dataframe ----------------------------------
-
-
-st.subheader("🍿 Películas disponibles")
-
-movies_filter = movies_filter[["poster", "Movie Spanish"] + [col for col in movies_filter.columns if col not in ["poster", "Movie Spanish"]]]
-
-st.dataframe(
-    movies_filter,
-    column_config={
-        "poster": st.column_config.ImageColumn("Poster", width="large"),
-        "Movie Spanish": st.column_config.TextColumn("Película"),
-        "info_hover": st.column_config.TextColumn("Sinopsis (preview)")
-    },
-    hide_index=True,
-    use_container_width=True,
-    height=700
-)
-
-# st.dataframe(
-  #  movies_filter,
-   # use_container_width=True,
-    #hide_index=True )
-
-st.write("")
-
-
 
 
 @st.cache_data(show_spinner=False)
