@@ -23,6 +23,7 @@ with st.container():
     st.write('Más fácil, más películas, menos drama')
     #st.write("[Google Drive >](https://docs.google.com/spreadsheets/d/1F2DuBLlwMgnVOZ7ALzqTzw-r2aaBNe9gKUBOBQKuvx8/edit#gid=0)")
 
+st.write(st.get_option("theme.primaryColor"))
 
 with st.container():
     st.write("---")
@@ -163,7 +164,7 @@ movies_filter['Rating'] = movies_filter['Rating'].round(1)
 # Año sin decimales (entero)
 movies_filter['Year'] = movies_filter['Year'].astype(int)
 
-
+movies_filter["info_hover"] = movies_filter["sinopsis"].str.slice(0, 120) + "..."
 
 # Gráfico ----------------------------------
 
@@ -226,18 +227,13 @@ movies_filter = movies_filter[["poster", "Movie Spanish"] + [col for col in movi
 st.dataframe(
     movies_filter,
     column_config={
-        "poster": st.column_config.ImageColumn(
-            "Poster",
-            help="Poster de la película",
-            width="large"
-        ),
-        "Movie Spanish": st.column_config.TextColumn(
-            "Película"
-        )
+        "poster": st.column_config.ImageColumn("Poster", width="large"),
+        "Movie Spanish": st.column_config.TextColumn("Película"),
+        "info_hover": st.column_config.TextColumn("Sinopsis (preview)")
     },
-    use_container_width=True,
     hide_index=True,
-    height=1000  # 👈 esto es lo que más “agranda” visualmente las filas
+    use_container_width=True,
+    height=700
 )
 
 # st.dataframe(
