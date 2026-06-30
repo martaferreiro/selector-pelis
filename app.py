@@ -8,12 +8,14 @@ import pandas as pd
 import plotly.express as px
 from PIL import Image
 import random
+import requests
 
+TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
 
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
-# Header
+# Header ----------------------------------
 
 with st.container():
     st.title('¿Qué peli ver hoy?')
@@ -28,6 +30,7 @@ with st.container():
     #st.write("##")
 
 
+# Filtros ----------------------------------
 
 movies = pd.read_csv('pelis_plot.csv')
 movies['Country'] = movies['Country'].fillna("")
@@ -48,6 +51,9 @@ unique_countries = ['United States of America', 'United Kingdom', 'France', 'Spa
 
 unique_info = ['LGTB', 'plot twist', 'carcel', 'Serie', 'Anime', 'Plano secuencia',
        'mamá', 'thriller', 'tom cruise', 'clasicas que no vi']
+
+
+# Sliders ----------------------------------
 
 col1, col2, col3 = st.columns(3)
 
@@ -85,6 +91,9 @@ with col3:
         )
     )
 
+
+
+# Desplegables ----------------------------------
 
 column1, column2, column3 = st.columns(3)
 
@@ -125,6 +134,9 @@ else:
 
 
 
+# Lógica filtros ----------------------------------
+
+
 mask = (
     movies['Runtime'].between(*runtime_selection) &
     genre_condition &
@@ -152,6 +164,9 @@ movies_filter['Year'] = movies_filter['Year'].astype(int)
 
 
 
+# Gráfico ----------------------------------
+
+
 st.subheader("📊 Distribución de ratings")
 
 chart_df = movies_filter.copy()
@@ -167,6 +182,8 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 
+# Dataframe ----------------------------------
+
 
 st.subheader("🍿 Películas disponibles")
 
@@ -178,20 +195,63 @@ st.dataframe(
 
 st.write("")
 
+@st.cache_data(show_spinner=False)
+def get_poster(movie_name):
+    url = "https://api.themoviedb.org/3/search/movie"
+    params = {
+        "api_key": TMDB_API_KEY,
+        "query": movie_name,
+        "language": "es-ES"
+    }
+
+    try:
+        r = requests.get(url, params=params, timeout=5).json()
+
+        if r.get("results"):
+            poster_path = r["results"][0].get("poster_path")
+            if poster_path:
+                return f"https://image.tmdb.org/t/p/w500{poster_path}"
+    except:
+        return None
+
+    return None
+
+
+@st.cache_data(show_spinner=False)
+def add_posters(df):
+    df = df.copy()
+    df["poster"] = df["Movie Spanish"].apply(get_poster)
+    return df
+
+
 if number_result > 0:
 
     if st.button("🎲 Elegir una película al azar"):
         peli_aleatoria = movies_filter.sample(1).iloc[0]
 
+        poster = get_poster(peli_aleatoria["Movie Spanish"])
+
         with st.container(border=True):
-            st.subheader(f"🎬 {peli_aleatoria['Movie Spanish']}")
 
-            st.write(f"⭐ {peli_aleatoria['Rating']}   |   📅 {peli_aleatoria['Year']}   |   ⏱️ {peli_aleatoria['Runtime']} min")
+            col1, col2 = st.columns([1, 3])
 
-            # 👇 comprobación correcta
-            if pd.notna(peli_aleatoria.get('mi_info')):
-                st.info(peli_aleatoria['mi_info'])
+            with col1:
+                if poster:
+                    st.image(poster, use_container_width=True)
 
-            st.write(peli_aleatoria['sinopsis'])
+            with col2:
+                st.subheader(f"🎬 {peli_aleatoria['Movie Spanish']}")
+
+                st.write(
+                    f"⭐ {peli_aleatoria['Rating']}   |   "
+                    f"📅 {peli_aleatoria['Year']}   |   "
+                    f"⏱️ {peli_aleatoria['Runtime']} min"
+                )
+
+                if pd.notna(peli_aleatoria.get('mi_info')):
+                    st.info(peli_aleatoria['mi_info'])
+
+                st.write(peli_aleatoria['sinopsis'])
+
 else:
     st.warning("No hay películas que cumplan los filtros seleccionados.")
