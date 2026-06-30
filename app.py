@@ -8,27 +8,8 @@ import pandas as pd
 import plotly.express as px
 from PIL import Image
 import random
-import requests
 
-TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
-@st.cache_data
-def get_poster(movie_name):
-    url = "https://api.themoviedb.org/3/search/movie"
-    params = {
-        "api_key": TMDB_API_KEY,
-        "query": movie_name,
-        "language": "es-ES"
-    }
-
-    r = requests.get(url, params=params).json()
-
-    if r["results"]:
-        poster_path = r["results"][0]["poster_path"]
-        if poster_path:
-            return f"https://image.tmdb.org/t/p/w500{poster_path}"
-
-    return None
 
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
@@ -189,30 +170,11 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 st.subheader("🍿 Películas disponibles")
 
-movies_filter["poster"] = movies_filter["Movie Spanish"].apply(get_poster)
-
 st.dataframe(
     movies_filter,
     use_container_width=True,
     hide_index=True
 )
-
-for _, row in movies_filter.iterrows():
-    with st.container(border=True):
-        cols = st.columns([1, 3])
-
-        with cols[0]:
-            if row["poster"]:
-                st.image(row["poster"], width=120)
-
-        with cols[1]:
-            st.subheader(row["Movie Spanish"])
-            st.write(f"⭐ {row['Rating']} | 📅 {row['Year']} | ⏱️ {row['Runtime']} min")
-
-            if pd.notna(row.get("mi_info")):
-                st.info(row["mi_info"])
-
-            st.write(row["sinopsis"])
 
 st.write("")
 
