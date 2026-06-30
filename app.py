@@ -49,6 +49,9 @@ unique_countries = ['United States of America', 'United Kingdom', 'France', 'Spa
        'United Arab Emirates', 'Chile', 'Lebanon', 'Botswana', 'Nigeria',
        'Czechoslovakia']
 
+unique_info = ['LGTB', 'plot twist', 'carcel', 'Serie', 'Anime', 'Plano secuencia',
+       'mamá', 'thriller', 'tom cruise', 'clasicas que no vi']
+
 col1, col2, col3 = st.columns(3)
 
 with col1:
@@ -86,13 +89,16 @@ with col3:
     )
 
 
-column1, column2 = st.columns(2)
+column1, column2, column3 = st.columns(3)
 
 with column1:
     genre_selection = st.multiselect('Género: ', unique_movies, placeholder='Selecciona uno o más géneros')
 
 with column2:
     country_selection = st.multiselect('País: ', unique_countries, placeholder='Selecciona uno o más países')
+
+with column3:
+    info_selection = st.multiselect('Categoría especial: ', unique_info, placeholder='Selecciona una categoría personal')
 
 
 # Create a condition that requires all selected genres to be present in a movie
@@ -113,10 +119,20 @@ else:
     country_condition = pd.Series(True, index=movies.index)
 
 
+info_conditions = [movies['mi_info'].str.contains(info, case=False) for info in info_selection]
+
+if info_conditions:
+    info_condition = pd.concat(info_conditions, axis=1).any(axis=1)
+else:
+    info_condition = pd.Series(True, index=movies.index)
+
+
+
 mask = (
     movies['Runtime'].between(*runtime_selection) &
     genre_condition &
     country_condition &
+    info_condition &
     movies['Year'].between(*year_selection) &
     movies['Rating'].between(*rating_selection)
 )
