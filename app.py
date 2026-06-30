@@ -226,19 +226,6 @@ movies_filter = add_posters(movies_filter)
 
 st.subheader("🍿 Películas disponibles")
 
-st.data_editor(
-    movies_filter,
-    column_config={
-        "poster": st.column_config.ImageColumn(
-            "Poster",
-            width="medium",
-        ),
-    },
-    hide_index=True,
-    disabled=True,
-    use_container_width=True
-)
-
 st.dataframe(
     movies_filter,
     column_config={
