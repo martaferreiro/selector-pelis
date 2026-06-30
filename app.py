@@ -13,6 +13,7 @@ import requests
 TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
 
+
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
 # Header ----------------------------------
@@ -182,16 +183,55 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 
+# Poster code ----------------------------------
+
+
+@st.cache_data(show_spinner=False)
+def add_posters(df):
+    df = df.copy()
+    df["poster"] = df["Movie Spanish"].apply(get_poster)
+    return df
+
+
+movies_filter = add_posters(movies_filter)
+
+
 # Dataframe ----------------------------------
 
 
 st.subheader("🍿 Películas disponibles")
 
+st.data_editor(
+    movies_filter,
+    column_config={
+        "poster": st.column_config.ImageColumn(
+            "Poster",
+            width="medium",
+        ),
+    },
+    hide_index=True,
+    disabled=True,
+    use_container_width=True
+)
+
 st.dataframe(
     movies_filter,
+    column_config={
+        "poster": st.column_config.ImageColumn(
+            "Poster",
+            help="Poster de la película",
+            width="medium",
+        ),
+    },
     use_container_width=True,
-    hide_index=True
+    hide_index=True,
+    height=800
 )
+
+# st.dataframe(
+  #  movies_filter,
+   # use_container_width=True,
+    #hide_index=True )
 
 st.write("")
 
