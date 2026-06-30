@@ -1,9 +1,7 @@
-#######
 
 # Para que funcione pon en el terminal:
 # streamlit run movies.py
 
-########
 
 
 st.markdown("""
