@@ -4,45 +4,6 @@
 
 
 
-st.markdown("""
-<style>
-/* Fondo oscuro tipo Netflix */
-.stApp {
-    background-color: #0e0e10;
-    color: white;
-}
-
-/* Títulos */
-h1, h2, h3 {
-    color: #ffffff;
-    font-family: 'Helvetica';
-}
-
-/* Botones */
-.stButton button {
-    background-color: #e50914;
-    color: white;
-    border-radius: 8px;
-    font-weight: bold;
-}
-
-/* Dataframe más “cine” */
-.dataframe {
-    border-radius: 10px;
-}
-
-/* Cards */
-.block-container {
-    padding-top: 2rem;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-
-
-
-
 
 import streamlit as st
 import pandas as pd
