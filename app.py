@@ -240,6 +240,27 @@ event = st.dataframe(
 
 movies_filter = movies_filter.reset_index(drop=True)
 
+if st.button("🎲 Elegir una película al azar"):
+
+    available_movies = movies_filter.copy()
+
+    if len(st.session_state.seen_movies) > 0:
+        available_movies = available_movies[
+            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
+        ]
+
+    if available_movies.empty:
+        st.warning("Ya has visto todas las películas 🎬")
+    else:
+        peli_aleatoria = available_movies.sample(1).iloc[0]
+
+        st.session_state.active_movie = peli_aleatoria
+        st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
+
+    st.rerun()
+
+
+
 if event.selection.rows:
     selected_index = event.selection.rows[0]
     st.session_state.active_movie = movies_filter.iloc[selected_index]
@@ -277,24 +298,7 @@ if isinstance(st.session_state.get("active_movie"), pd.Series):
 if "seen_movies" not in st.session_state:
     st.session_state.seen_movies = set()
 
-if st.button("🎲 Elegir una película al azar"):
 
-    available_movies = movies_filter.copy()
-
-    if len(st.session_state.seen_movies) > 0:
-        available_movies = available_movies[
-            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
-        ]
-
-    if available_movies.empty:
-        st.warning("Ya has visto todas las películas 🎬")
-    else:
-        peli_aleatoria = available_movies.sample(1).iloc[0]
-
-        st.session_state.active_movie = peli_aleatoria
-        st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
-
-    st.rerun()
 
 def clear_selection():
     st.session_state.active_movie = None
