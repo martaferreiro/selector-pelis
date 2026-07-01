@@ -193,21 +193,28 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 # Dataframe ----------------------------------
+# =========================
+# 🎲 FUNCIONES
+# =========================
 
 def pick_random_movie():
     available_movies = movies_filter.copy()
 
+    # quitar ya vistas
     if st.session_state.seen_movies:
         available_movies = available_movies[
             ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
         ]
 
+    # si no quedan
     if available_movies.empty:
         st.warning("Ya has visto todas las películas 🎬")
         return
 
+    # elegir una
     movie = available_movies.sample(1).iloc[0]
 
+    # actualizar estado
     st.session_state.active_movie = movie
     st.session_state.seen_movies.add(movie["Movie Spanish"])
 
@@ -241,8 +248,11 @@ def add_posters(df):
     return df
 
 
-st.subheader("🍿 Películas disponibles")
+# =========================
+# 🎬 DATAFRAME INTERACTIVO
+# =========================
 
+st.subheader("🍿 Películas disponibles")
 
 event = st.dataframe(
     movies_filter,
@@ -256,14 +266,22 @@ event = st.dataframe(
     selection_mode="single-row"
 )
 
+# click en tabla
 if event.selection.rows:
     idx = event.selection.rows[0]
     st.session_state.active_movie = movies_filter.iloc[idx]
 
-movies_filter = movies_filter.reset_index(drop=True)
+
+# =========================
+# 🎲 BOTÓN ALEATORIO (IMPORTANTE)
+# =========================
 
 st.button("🎲 Elegir una película al azar", on_click=pick_random_movie)
 
+
+# =========================
+# 🎬 PANEL DE DETALLE (ÚNICO)
+# =========================
 
 if st.session_state.active_movie is not None:
 
@@ -295,11 +313,10 @@ if st.session_state.active_movie is not None:
 
             st.write(peli["sinopsis"])
 
-            
-if "seen_movies" not in st.session_state:
-    st.session_state.seen_movies = set()
 
-
+# =========================
+# 🧹 LIMPIAR SELECCIÓN
+# =========================
 
 def clear_selection():
     st.session_state.active_movie = None
