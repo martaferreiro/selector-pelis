@@ -9,6 +9,7 @@ import plotly.express as px
 from PIL import Image
 import random
 import requests
+import numpy as np
 
 TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
@@ -167,19 +168,33 @@ movies_filter['Year'] = movies_filter['Year'].astype(int)
 # Gráfico ----------------------------------
 
 
-st.subheader("📊 Distribución de ratings")
+st.subheader("📊 Distribución de ratings (intervalos de 0.5)")
 
 chart_df = movies_filter.copy()
 
-fig_data = chart_df["Rating"].round(1).value_counts().sort_index()
+# 🔥 crear bins de 0.5
+min_rating = np.floor(chart_df["Rating"].min() * 2) / 2
+max_rating = np.ceil(chart_df["Rating"].max() * 2) / 2
+
+bins = np.arange(min_rating, max_rating + 0.5, 0.5)
+
+labels = [f"{b:.1f} - {b+0.5:.1f}" for b in bins[:-1]]
+
+chart_df["rating_bin"] = pd.cut(
+    chart_df["Rating"],
+    bins=bins,
+    labels=labels,
+    include_lowest=True
+)
+
+fig_data = chart_df["rating_bin"].value_counts().sort_index()
 
 chart_df_plot = pd.DataFrame({
-    "Rating": fig_data.index,
+    "Rango": fig_data.index,
     "Número de pelis": fig_data.values
 })
 
-st.bar_chart(chart_df_plot.set_index("Rating"))
-
+st.bar_chart(chart_df_plot.set_index("Rango"))
 
 
 # Dataframe ----------------------------------
