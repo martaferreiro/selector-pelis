@@ -16,6 +16,7 @@ if "active_movie" not in st.session_state:
 if "seen_movies" not in st.session_state:
     st.session_state.seen_movies = set()
 
+
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
 # Header ----------------------------------
@@ -193,6 +194,22 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 # Dataframe ----------------------------------
 
+def pick_random_movie():
+    available_movies = movies_filter.copy()
+
+    if st.session_state.seen_movies:
+        available_movies = available_movies[
+            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
+        ]
+
+    if available_movies.empty:
+        st.warning("Ya has visto todas las películas 🎬")
+        return
+
+    movie = available_movies.sample(1).iloc[0]
+
+    st.session_state.active_movie = movie
+    st.session_state.seen_movies.add(movie["Movie Spanish"])
 
 
 @st.cache_data(show_spinner=False)
@@ -226,6 +243,7 @@ def add_posters(df):
 
 st.subheader("🍿 Películas disponibles")
 
+
 event = st.dataframe(
     movies_filter,
     column_config={
@@ -233,39 +251,21 @@ event = st.dataframe(
     },
     use_container_width=True,
     hide_index=True,
-    height=800,
+    height=600,
     on_select="rerun",
     selection_mode="single-row"
 )
 
+if event.selection.rows:
+    idx = event.selection.rows[0]
+    st.session_state.active_movie = movies_filter.iloc[idx]
+
 movies_filter = movies_filter.reset_index(drop=True)
 
-if st.button("🎲 Elegir una película al azar"):
-
-    available_movies = movies_filter.copy()
-
-    if len(st.session_state.seen_movies) > 0:
-        available_movies = available_movies[
-            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
-        ]
-
-    if available_movies.empty:
-        st.warning("Ya has visto todas las películas 🎬")
-    else:
-        peli_aleatoria = available_movies.sample(1).iloc[0]
-
-        st.session_state.active_movie = peli_aleatoria
-        st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
-
-    st.rerun()
+st.button("🎲 Elegir una película al azar", on_click=pick_random_movie)
 
 
-
-if event.selection.rows:
-    selected_index = event.selection.rows[0]
-    st.session_state.active_movie = movies_filter.iloc[selected_index]
-
-if isinstance(st.session_state.get("active_movie"), pd.Series):
+if st.session_state.active_movie is not None:
 
     peli = st.session_state.active_movie
     poster = get_poster(peli["Movie Spanish"])
@@ -295,6 +295,7 @@ if isinstance(st.session_state.get("active_movie"), pd.Series):
 
             st.write(peli["sinopsis"])
 
+            
 if "seen_movies" not in st.session_state:
     st.session_state.seen_movies = set()
 
