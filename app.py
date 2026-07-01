@@ -10,6 +10,11 @@ import requests
 
 TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
 
+if "active_movie" not in st.session_state:
+    st.session_state.active_movie = None
+
+if "seen_movies" not in st.session_state:
+    st.session_state.seen_movies = set()
 
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
 
@@ -188,11 +193,7 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 # Dataframe ----------------------------------
 
-if "active_movie" not in st.session_state:
-    st.session_state.active_movie = None
 
-if "seen_movies" not in st.session_state:
-    st.session_state.seen_movies = set()
 
 @st.cache_data(show_spinner=False)
 def get_poster(movie_name):
@@ -239,7 +240,7 @@ event = st.dataframe(
 
 if event.selection.rows:
     selected_index = event.selection.rows[0]
-    st.session_state.active_movie = movies_filter.iloc[selected_index]
+    st.session_state.active_movie = movies_filter.reset_index(drop=True, inplace=True)
 
 if st.session_state.active_movie is not None:
 
@@ -276,9 +277,12 @@ if "seen_movies" not in st.session_state:
 
 if st.button("🎲 Elegir una película al azar"):
 
-    available_movies = movies_filter[
-        ~movies_filter["Movie Spanish"].isin(st.session_state.seen_movies)
-    ]
+    available_movies = movies_filter.copy()
+
+    if len(st.session_state.seen_movies) > 0:
+        available_movies = available_movies[
+            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
+        ]
 
     if available_movies.empty:
         st.warning("Ya has visto todas las películas 🎬")
@@ -288,6 +292,7 @@ if st.button("🎲 Elegir una película al azar"):
         st.session_state.active_movie = peli_aleatoria
         st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
 
+    st.rerun()
 
 def clear_selection():
     st.session_state.active_movie = None
