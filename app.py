@@ -1,20 +1,16 @@
+
 # Para que funcione pon en el terminal:
 # streamlit run app.py
 
-from PIL import Image
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from PIL import Image
 import random
 import requests
 
 TMDB_API_KEY = "7aea10942638f813719584d6a2f512c0"
-
-if "active_movie" not in st.session_state:
-    st.session_state.active_movie = None
-
-if "seen_movies" not in st.session_state:
-    st.session_state.seen_movies = set()
 
 
 st.set_page_config(page_title='Selector de pelis', page_icon="🎥", layout="wide")
@@ -37,9 +33,7 @@ with st.container():
 # Filtros ----------------------------------
 
 movies = pd.read_csv('pelis_plot.csv')
-
 movies['Country'] = movies['Country'].fillna("")
-
 unique_movies = ['Drama', 'Comedia', 'Suspense', 'Romance', 'Crimen', 'Terror',
        'Misterio', 'Acción', 'Ciencia ficción', 'Aventura', 'Fantasía',
        'Historia', 'Animación', 'Bélica', 'Documental', 'Familia', 'Música',
@@ -113,12 +107,8 @@ with column3:
     info_selection = st.multiselect('Categoría especial: ', unique_info, placeholder='Selecciona una categoría personal')
 
 
-
-
 # Create a condition that requires all selected genres to be present in a movie
 genre_conditions = [movies['Genre'].str.contains(genre, case=False) for genre in genre_selection]
-
-
 
 # Combine the conditions with an "AND" condition (all conditions must be met)
 if genre_conditions:
@@ -144,7 +134,6 @@ else:
 
 
 
-
 # Lógica filtros ----------------------------------
 
 
@@ -158,6 +147,7 @@ mask = (
 )
 
 number_result = movies[mask].shape[0]
+
 
 
 st.markdown(f'Resultados: {number_result}')
@@ -193,31 +183,17 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 
 # Dataframe ----------------------------------
-# =========================
-# 🎲 FUNCIONES
-# =========================
 
-def pick_random_movie():
-    available_movies = movies_filter.copy()
 
-    # quitar ya vistas
-    if st.session_state.seen_movies:
-        available_movies = available_movies[
-            ~available_movies["Movie Spanish"].isin(st.session_state.seen_movies)
-        ]
+st.subheader("🍿 Películas disponibles")
 
-    # si no quedan
-    if available_movies.empty:
-        st.warning("Ya has visto todas las películas 🎬")
-        return
+st.dataframe(
+    movies_filter,
+    use_container_width=True,
+    hide_index=True
+)
 
-    # elegir una
-    movie = available_movies.sample(1).iloc[0]
-
-    # actualizar estado
-    st.session_state.active_movie = movie
-    st.session_state.seen_movies.add(movie["Movie Spanish"])
-
+st.write("")
 
 @st.cache_data(show_spinner=False)
 def get_poster(movie_name):
@@ -248,77 +224,34 @@ def add_posters(df):
     return df
 
 
-# =========================
-# 🎬 DATAFRAME INTERACTIVO
-# =========================
+if number_result > 0:
 
-st.subheader("🍿 Películas disponibles")
+    if st.button("🎲 Elegir una película al azar"):
+        peli_aleatoria = movies_filter.sample(1).iloc[0]
 
-event = st.dataframe(
-    movies_filter,
-    column_config={
-        "poster": st.column_config.ImageColumn("Poster", width="medium"),
-    },
-    use_container_width=True,
-    hide_index=True,
-    height=600,
-    on_select="rerun",
-    selection_mode="single-row"
-)
+        poster = get_poster(peli_aleatoria["Movie Spanish"])
 
-# click en tabla
-if event.selection.rows:
-    idx = event.selection.rows[0]
-    st.session_state.active_movie = movies_filter.iloc[idx]
+        with st.container(border=True):
 
+            col1, col2 = st.columns([1, 3])
 
-# =========================
-# 🎲 BOTÓN ALEATORIO (IMPORTANTE)
-# =========================
+            with col1:
+                if poster:
+                    st.image(poster, use_container_width=True)
 
-st.button("🎲 Elegir una película al azar", on_click=pick_random_movie)
+            with col2:
+                st.subheader(f"🎬 {peli_aleatoria['Movie Spanish']}")
 
+                st.write(
+                    f"⭐ {peli_aleatoria['Rating']}   |   "
+                    f"📅 {peli_aleatoria['Year']}   |   "
+                    f"⏱️ {peli_aleatoria['Runtime']} min"
+                )
 
-# =========================
-# 🎬 PANEL DE DETALLE (ÚNICO)
-# =========================
+                if pd.notna(peli_aleatoria.get('mi_info')):
+                    st.info(peli_aleatoria['mi_info'])
 
-if st.session_state.active_movie is not None:
+                st.write(peli_aleatoria['sinopsis'])
 
-    peli = st.session_state.active_movie
-    poster = get_poster(peli["Movie Spanish"])
-
-    st.divider()
-
-    with st.container(border=True):
-
-        col1, col2 = st.columns([1, 3])
-
-        with col1:
-            if poster:
-                img = Image.open(requests.get(poster, stream=True).raw)
-                st.image(img, use_container_width=True)
-
-        with col2:
-            st.subheader(f"🎬 {peli['Movie Spanish']}")
-
-            st.write(
-                f"⭐ {peli['Rating']}   |   "
-                f"📅 {peli['Year']}   |   "
-                f"⏱️ {peli['Runtime']} min"
-            )
-
-            if pd.notna(peli.get("mi_info")):
-                st.info(peli["mi_info"])
-
-            st.write(peli["sinopsis"])
-
-
-# =========================
-# 🧹 LIMPIAR SELECCIÓN
-# =========================
-
-def clear_selection():
-    st.session_state.active_movie = None
-
-st.button("❌ Limpiar selección", on_click=clear_selection)
+else:
+    st.warning("No hay películas que cumplan los filtros seleccionados.")
