@@ -278,4 +278,4 @@ else:
 
 
 if st.button("🔄 Reset películas vistas"):
-st.session_state.seen_movies = set()
+    st.session_state.seen_movies = set()
