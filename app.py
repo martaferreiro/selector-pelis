@@ -188,7 +188,10 @@ fig.update_layout(
     yaxis_title="Número de películas",
     bargap=0.05
 )
-
+fig.update_xaxes(dtick=0.5)
+fig.update_layout(
+    template="plotly_dark",
+)
 st.plotly_chart(fig, use_container_width=True)
 
 
