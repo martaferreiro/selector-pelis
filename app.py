@@ -188,6 +188,12 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 # Dataframe ----------------------------------
 
+if "active_movie" not in st.session_state:
+    st.session_state.active_movie = None
+
+if "seen_movies" not in st.session_state:
+    st.session_state.seen_movies = set()
+
 @st.cache_data(show_spinner=False)
 def get_poster(movie_name):
     url = "https://api.themoviedb.org/3/search/movie"
@@ -233,13 +239,17 @@ event = st.dataframe(
 
 if event.selection.rows:
     selected_index = event.selection.rows[0]
-    peli = movies_filter.iloc[selected_index]
+    st.session_state.active_movie = movies_filter.iloc[selected_index]
 
+if st.session_state.active_movie is not None:
+
+    peli = st.session_state.active_movie
     poster = get_poster(peli["Movie Spanish"])
 
     st.divider()
 
     with st.container(border=True):
+
         col1, col2 = st.columns([1, 3])
 
         with col1:
@@ -261,58 +271,25 @@ if event.selection.rows:
 
             st.write(peli["sinopsis"])
 
-st.write("")
-
-
 if "seen_movies" not in st.session_state:
     st.session_state.seen_movies = set()
 
-if number_result > 0:
+if st.button("🎲 Elegir una película al azar"):
 
-    if st.button("🎲 Elegir una película al azar"):
+    available_movies = movies_filter[
+        ~movies_filter["Movie Spanish"].isin(st.session_state.seen_movies)
+    ]
 
-        # quitar las ya vistas del filtro actual
-        available_movies = movies_filter[
-            ~movies_filter["Movie Spanish"].isin(st.session_state.seen_movies)
-        ]
+    if available_movies.empty:
+        st.warning("Ya has visto todas las películas 🎬")
+    else:
+        peli_aleatoria = available_movies.sample(1).iloc[0]
 
-        # si ya viste todas
-        if available_movies.empty:
-            st.warning("Ya has visto todas las películas de este filtro 🎬")
-        else:
-            peli_aleatoria = available_movies.sample(1).iloc[0]
-
-            # guardar como vista
-            st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
-
-            poster = get_poster(peli_aleatoria["Movie Spanish"])
-
-            with st.container(border=True):
-
-                col1, col2 = st.columns([1, 3])
-
-                with col1:
-                    if poster:
-                        img = Image.open(requests.get(poster, stream=True).raw)
-                        st.image(img, use_container_width=True)
-
-                with col2:
-                    st.subheader(f"🎬 {peli_aleatoria['Movie Spanish']}")
-
-                    st.write(
-                        f"⭐ {peli_aleatoria['Rating']}   |   "
-                        f"📅 {peli_aleatoria['Year']}   |   "
-                        f"⏱️ {peli_aleatoria['Runtime']} min"
-                    )
-
-                    if pd.notna(peli_aleatoria.get('mi_info')):
-                        st.info(peli_aleatoria['mi_info'])
-
-                    st.write(peli_aleatoria['sinopsis'])
-else:
-    st.warning("No hay películas que cumplan los filtros seleccionados.")
+        st.session_state.active_movie = peli_aleatoria
+        st.session_state.seen_movies.add(peli_aleatoria["Movie Spanish"])
 
 
+def clear_selection():
+    st.session_state.active_movie = None
 
-if st.button("🔄 Reset películas vistas"):
-    st.session_state.seen_movies = set()
+st.button("❌ Limpiar selección", on_click=clear_selection)
