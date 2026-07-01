@@ -168,33 +168,28 @@ movies_filter['Year'] = movies_filter['Year'].astype(int)
 # Gráfico ----------------------------------
 
 
-st.subheader("📊 Distribución de ratings (intervalos de 0.5)")
+
+
+
+st.subheader("📊 Distribución de ratings")
 
 chart_df = movies_filter.copy()
 
-# 🔥 crear bins de 0.5
-min_rating = np.floor(chart_df["Rating"].min() * 2) / 2
-max_rating = np.ceil(chart_df["Rating"].max() * 2) / 2
-
-bins = np.arange(min_rating, max_rating + 0.5, 0.5)
-
-labels = [f"{b:.1f} - {b+0.5:.1f}" for b in bins[:-1]]
-
-chart_df["rating_bin"] = pd.cut(
-    chart_df["Rating"],
-    bins=bins,
-    labels=labels,
-    include_lowest=True
+fig = px.histogram(
+    chart_df,
+    x="Rating",
+    nbins=int((chart_df["Rating"].max() - chart_df["Rating"].min()) * 2),
 )
 
-fig_data = chart_df["rating_bin"].value_counts().sort_index()
+fig.update_traces(xbins=dict(size=0.5))
 
-chart_df_plot = pd.DataFrame({
-    "Rango": fig_data.index,
-    "Número de pelis": fig_data.values
-})
+fig.update_layout(
+    xaxis_title="Rating",
+    yaxis_title="Número de películas",
+    bargap=0.05
+)
 
-st.bar_chart(chart_df_plot.set_index("Rango"))
+st.plotly_chart(fig, use_container_width=True)
 
 
 # Dataframe ----------------------------------
