@@ -238,11 +238,13 @@ event = st.dataframe(
     selection_mode="single-row"
 )
 
+movies_filter = movies_filter.reset_index(drop=True)
+
 if event.selection.rows:
     selected_index = event.selection.rows[0]
-    st.session_state.active_movie = movies_filter.reset_index(drop=True, inplace=True)
+    st.session_state.active_movie = movies_filter.iloc[selected_index]
 
-if st.session_state.active_movie is not None:
+if isinstance(st.session_state.get("active_movie"), pd.Series):
 
     peli = st.session_state.active_movie
     poster = get_poster(peli["Movie Spanish"])
