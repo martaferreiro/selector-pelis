@@ -188,17 +188,6 @@ st.bar_chart(chart_df_plot.set_index("Rating"))
 
 # Dataframe ----------------------------------
 
-
-st.subheader("🍿 Películas disponibles")
-
-st.dataframe(
-    movies_filter,
-    use_container_width=True,
-    hide_index=True
-)
-
-st.write("")
-
 @st.cache_data(show_spinner=False)
 def get_poster(movie_name):
     url = "https://api.themoviedb.org/3/search/movie"
@@ -226,6 +215,54 @@ def add_posters(df):
     df = df.copy()
     df["poster"] = df["Movie Spanish"].apply(get_poster)
     return df
+
+
+st.subheader("🍿 Películas disponibles")
+
+event = st.dataframe(
+    movies_filter,
+    column_config={
+        "poster": st.column_config.ImageColumn("Poster", width="medium"),
+    },
+    use_container_width=True,
+    hide_index=True,
+    height=800,
+    on_select="rerun",
+    selection_mode="single-row"
+)
+
+if event.selection.rows:
+    selected_index = event.selection.rows[0]
+    peli = movies_filter.iloc[selected_index]
+
+    poster = get_poster(peli["Movie Spanish"])
+
+    st.divider()
+
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 3])
+
+        with col1:
+            if poster:
+                img = Image.open(requests.get(poster, stream=True).raw)
+                st.image(img, use_container_width=True)
+
+        with col2:
+            st.subheader(f"🎬 {peli['Movie Spanish']}")
+
+            st.write(
+                f"⭐ {peli['Rating']}   |   "
+                f"📅 {peli['Year']}   |   "
+                f"⏱️ {peli['Runtime']} min"
+            )
+
+            if pd.notna(peli.get("mi_info")):
+                st.info(peli["mi_info"])
+
+            st.write(peli["sinopsis"])
+
+st.write("")
+
 
 if "seen_movies" not in st.session_state:
     st.session_state.seen_movies = set()
